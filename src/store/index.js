@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
@@ -8,8 +9,8 @@ export default new Vuex.Store({
   state: {
     isLoading: false,
     pharmacies: [],
-    loacations: [],
-    zones: [],
+    county: [],
+    towns: [],
   },
   actions: {
     updateLoading(context, status) {
@@ -17,19 +18,15 @@ export default new Vuex.Store({
     },
     getPharmacy(context) {
       const api = 'https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json';
-      // fetch(api).then((res) => res.json())
-      //   .then((data) => {
-      //     console.log('data', data); // eslint-disable-line no-console
-      //     context.commit('PHARMACY', data);
-      // });
       context.commit('LOADING', true);
       axios.get(api).then((res) => {
-        // console.log('data', res.data.features);
         context.commit('PHARMACY', res.data.features);
-        // context.commit('LOCATIONS', res.data.features);
-        // context.commit('ZONES', res.data.features);
+        context.commit('COUNTY', res.data.features);
         context.commit('LOADING', false);
       });
+    },
+    towns(context, zones) {
+      context.commit('TOWNS', zones);
     },
   },
   mutations: {
@@ -39,23 +36,18 @@ export default new Vuex.Store({
     PHARMACY(state, payload) {
       state.pharmacies = payload;
     },
-    // LOCATIONS(state, payload) {
-    // const cityArray = payload.map((value) => value.properties.address.substr(0, 3));
-    // state.locations = cityArray.filter((value, index, arr) => arr.indexOf(value) === index);
-    //   const city = new Set();
-    //   payload.forEach((value) => {
-    //     city.add(value.properties.address.substr(0, 3));
-    //   });
-    //   state.locations = Array.from(city);
-    //   console.log('locations', state.locations);
-    // },
-    // ZONES(state, payload) {
-    //   const zone = new Set();
-    //   payload.forEach((value) => {
-    //     zone.add(value.properties.address.substr(3, 3));
-    //   });
-    //   state.zones = Array.from(zone);
-    //   console.log('zones', state.zones);
-    // },
+    COUNTY(state, payload) {
+      const city = new Set();
+      payload.forEach((value) => {
+        if (!value.properties.county) return;
+        city.add(value.properties.county);
+      });
+      state.county = Array.from(city);
+      // console.log('縣市', state.county);
+    },
+    TOWNS(state, payload) {
+      state.towns = payload;
+      // console.log('地區', state.towns);
+    },
   },
 });
