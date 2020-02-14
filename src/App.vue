@@ -1,8 +1,8 @@
 <template>
-  <div id="app" class="flex h-screen">
+  <div id="app" class="lg:flex h-screen">
     <Loading :active.sync="isLoading"></Loading>
 
-    <div class="w-3/12 h-screen overflow-y-scroll">
+    <div class="w-full lg:w-3/12 overflow-y-scroll">
       <div class="bg-light p-4 sticky top-0 z-10">
         <div class="flex items-center mb-4">
           <label for="city" class="mr-4">縣市</label>
@@ -39,9 +39,9 @@
               <span>{{ item.properties.phone }}</span>
             </div>
             <div class="flex justify-center mb-2">
-              <div class="text-center py-3 rounded-l rounded-r-none border-r w-1/2"
+              <div class="text-center py-3 rounded-l rounded-r-none border-r border-white w-1/2"
                 :class="maskAdultClass()"
-                v-if="item.properties.mask_adult === 0">
+                v-if="!item.properties.mask_adult">
                 <span class="mr-1">成人口罩:</span>
                 <span>已售完</span>
               </div>
@@ -52,30 +52,29 @@
               </div>
               <div class="text-center py-3 rounded-r rounded-l-none w-1/2"
                 :class="maskChildClass()"
-                v-if="item.properties.mask_child === 0">
+                v-if="!item.properties.mask_child">
                 <span class="mr-1">兒童口罩:</span>
                 <span>已售完</span>
               </div>
-              <div class="text-center py-3 rounded-r rounded-l-none border-r w-1/2
+              <div class="text-center py-3 rounded-r rounded-l-none w-1/2
                 bg-primary text-white" v-else>
                 <span class="mr-1">兒童口罩:</span>
                 <span>{{ item.properties.mask_child }}</span>
               </div>
             </div>
             <div class="text-sm text-grey">
-              更新時間: {{ item.properties.updated === '' ? '無' : item.properties.updated }}
+              更新時間: {{ !item.properties.updated ? '無' : item.properties.updated }}
             </div>
           </a>
         </li>
       </ul>
     </div>
-    <VueLeaflet :update-map="searchResult" />
+    <VueLeaflet :update-map="updateMap" />
   </div>
 </template>
 
 <script>
 /* eslint-disable arrow-body-style */
-// import { latLng } from 'leaflet';
 import VueLeaflet from './components/VueLeaflet.vue';
 
 export default {
@@ -87,7 +86,7 @@ export default {
     return {
       selectedCity: '高雄市',
       selectedZone: '三民區',
-      searchResult: [],
+      updateMap: [],
     };
   },
   computed: {
@@ -108,14 +107,12 @@ export default {
       const filterCityData = vm.pharmacies.filter((value) => {
         return value.properties.county === vm.selectedCity;
       });
-      this.filterTown(filterCityData);
+      vm.filterTown(filterCityData);
       const filterData = vm.pharmacies.filter((value) => {
-        return value.properties.county === vm.selectedCity && value.properties.town === vm.selectedZone;
+        return value.properties.county === vm.selectedCity
+                && value.properties.town === vm.selectedZone;
       });
-      vm.searchResult = vm.selectedZone ? filterData : filterCityData;
-      // console.log('result', vm.searchResult);
-      // console.log('city', vm.selectedCity);
-      // console.log('zone', vm.selectedZone);
+      vm.updateMap = vm.selectedZone ? filterData : filterCityData;
       return vm.selectedZone ? filterData : filterCityData;
     },
   },
@@ -151,17 +148,14 @@ export default {
     this.getPharmacy();
     // 取得目前所在位置經緯度
     navigator.geolocation.getCurrentPosition((pos) => {
-      // console.log(pos);
       const p = pos.coords;
-      // this.center = latLng(p.latitude, p.longitude);
       this.center = [p.latitude, p.longitude];
     });
   },
 };
 </script>
+
 <style lang="scss">
-  @import "~leaflet.markercluster/dist/MarkerCluster.css";
-  @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
   .map-icon {
     background-image: url('./assets/images/location.svg');
   }

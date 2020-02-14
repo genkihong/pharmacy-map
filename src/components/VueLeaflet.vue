@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-leaflet w-9/12 h-screen">
+  <div class="hidden lg:block lg:w-9/12 h-screen">
     <l-map
     :zoom="zoom"
     :center="center"
@@ -7,7 +7,7 @@
     @update:center="centerUpdated"
     @update:bounds="boundsUpdated"
     >
-      <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
+      <l-tile-layer :url="url"></l-tile-layer>
       <v-marker-cluster :options="clusterOptions">
         <l-marker v-for="item in updateMap"
           :key="item.id"
@@ -25,13 +25,25 @@
               <span>{{item.properties.phone}}</span>
             </div>
             <div class="text-base flex mb-2 justify-center">
-              <div class="text-center text-white bg-primary py-2 rounded-l rounded-r-none border-r w-1/2">
+              <div class="text-center py-3 rounded-l rounded-r-none border-r border-white w-1/2"
+                :class="maskAdultClass()"
+                v-if="!item.properties.mask_adult">
+                <span>成人口罩: 0</span>
+              </div>
+              <div class="text-center py-3 rounded-l rounded-r-none border-r w-1/2
+                bg-primary text-white" v-else>
                 <span class="mr-1">成人口罩:</span>
                 <span>{{item.properties.mask_adult}}</span>
               </div>
-              <div class="text-center text-white bg-primary py-2 rounded-r rounded-l-none w-1/2">
+              <div class="text-center py-3 rounded-r rounded-l-none w-1/2"
+                :class="maskChildClass()"
+                v-if="!item.properties.mask_child">
+                <span>兒童口罩: 0</span>
+              </div>
+              <div class="text-center py-3 rounded-r rounded-l-none w-1/2
+                bg-primary text-white" v-else>
                 <span class="mr-1">兒童口罩:</span>
-                <span>{{item.properties.mask_child}}</span>
+                <span>{{ item.properties.mask_child }}</span>
               </div>
             </div>
             <div class="text-sm text-grey"
@@ -45,15 +57,14 @@
 </template>
 
 <script>
+import { latLng, Icon } from 'leaflet';
 import {
   LMap,
   LTileLayer,
   LMarker,
   LPopup,
 } from 'vue2-leaflet';
-import { Icon } from 'leaflet';
 import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster';
-
 
 export default {
   name: 'VueLeaflet',
@@ -72,11 +83,9 @@ export default {
   data() {
     return {
       zoom: 12,
-      // center: latLng(22.627333, 120.318065),
-      center: [22.627333, 120.318065],
+      center: latLng(22.627333, 120.318065),
       bounds: null,
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
       iconColor: {
         grey: this.customIconColor('grey'),
         blue: this.customIconColor('blue'),
@@ -91,15 +100,8 @@ export default {
   },
   watch: {
     updateMap() {
-      // console.log('緯度', this.updateMap[0].geometry.coordinates[1]);
-      // console.log('經度', this.updateMap[0].geometry.coordinates[0]);
-      this.center = [this.updateMap[0].geometry.coordinates[1], this.updateMap[0].geometry.coordinates[0]];
-    },
-  },
-  computed: {
-    // 更新口罩數量
-    pharmacies() {
-      return this.$store.state.pharmacies;
+      this.center = latLng(this.updateMap[0].geometry.coordinates[1],
+        this.updateMap[0].geometry.coordinates[0]);
     },
   },
   methods: {
@@ -114,8 +116,7 @@ export default {
     },
     // 座標經緯度
     getGeometry(geo) {
-      // return latLng(geo.coordinates[1], geo.coordinates[0]); // latLng(緯度，經度)
-      return [geo.coordinates[1], geo.coordinates[0]]; // latLng(緯度，經度)
+      return latLng(geo.coordinates[1], geo.coordinates[0]); // latLng(緯度，經度)
     },
     // 座標顏色
     customIconColor(color) {
@@ -145,6 +146,25 @@ export default {
       }
       return icon;
     },
+    maskAdultClass() {
+      const maskAdult = {
+        'bg-gray-300': true,
+        'text-gray-500': true,
+      };
+      return maskAdult;
+    },
+    maskChildClass() {
+      const maskChild = {
+        'bg-gray-300': true,
+        'text-gray-500': true,
+      };
+      return maskChild;
+    },
   },
 };
 </script>
+
+<style scope>
+  /* @import "~leaflet.markercluster/dist/MarkerCluster.css";
+  @import "~leaflet.markercluster/dist/MarkerCluster.Default.css"; */
+</style>
