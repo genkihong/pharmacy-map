@@ -11,10 +11,11 @@ export default new Vuex.Store({
     pharmacies: [],
     county: [],
     towns: [],
+    updateMap: [],
   },
   actions: {
     updateLoading(context, status) {
-      context.commit('LOADING', status); // 執行 mutations 內的 LOADING 要用 context.commit
+      context.commit('LOADING', status);
     },
     getPharmacy(context) {
       const api = 'https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json';
@@ -27,6 +28,9 @@ export default new Vuex.Store({
     },
     towns(context, zones) {
       context.commit('TOWNS', zones);
+    },
+    updateMap(context, data) {
+      context.commit('UPDATEMAP', data);
     },
   },
   mutations: {
@@ -43,11 +47,12 @@ export default new Vuex.Store({
         city.add(value.properties.county);
       });
       state.county = Array.from(city);
-      // console.log('縣市', state.county);
     },
     TOWNS(state, payload) {
       state.towns = payload;
-      // console.log('地區', state.towns);
+    },
+    UPDATEMAP(state, payload) {
+      state.updateMap = payload;
     },
   },
 });

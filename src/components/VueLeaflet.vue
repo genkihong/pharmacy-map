@@ -10,7 +10,7 @@
       <l-tile-layer :url="url"></l-tile-layer>
       <v-marker-cluster :options="clusterOptions">
         <l-marker v-for="item in updateMap"
-          :key="item.id"
+          :key="item.properties.id"
           :icon="customIcon(item.properties)"
           :lat-lng="getGeometry(item.geometry)"
         >
@@ -25,25 +25,21 @@
               <span>{{item.properties.phone}}</span>
             </div>
             <div class="text-base flex mb-2 justify-center">
-              <div class="text-center py-3 rounded-l rounded-r-none border-r border-white w-1/2"
-                :class="maskAdultClass()"
-                v-if="!item.properties.mask_adult">
-                <span>成人口罩: 0</span>
+              <div class="text-center py-3 rounded-l rounded-r-none border-r border-white w-1/2
+                bg-gray-300 text-gray-600" v-if="!item.properties.mask_adult">
+                <span>成人口罩:0</span>
               </div>
               <div class="text-center py-3 rounded-l rounded-r-none border-r w-1/2
                 bg-primary text-white" v-else>
-                <span class="mr-1">成人口罩:</span>
-                <span>{{item.properties.mask_adult}}</span>
+                <span>成人口罩:{{ item.properties.mask_adult }}</span>
               </div>
-              <div class="text-center py-3 rounded-r rounded-l-none w-1/2"
-                :class="maskChildClass()"
-                v-if="!item.properties.mask_child">
-                <span>兒童口罩: 0</span>
+              <div class="text-center py-3 rounded-r rounded-l-none w-1/2
+                bg-gray-300 text-gray-600" v-if="!item.properties.mask_child">
+                <span>兒童口罩:0</span>
               </div>
               <div class="text-center py-3 rounded-r rounded-l-none w-1/2
                 bg-primary text-white" v-else>
-                <span class="mr-1">兒童口罩:</span>
-                <span>{{ item.properties.mask_child }}</span>
+                <span>兒童口罩:{{ item.properties.mask_child }}</span>
               </div>
             </div>
             <div class="text-sm text-grey"
@@ -57,7 +53,8 @@
 </template>
 
 <script>
-import { latLng, Icon } from 'leaflet';
+import L from 'leaflet';
+
 import {
   LMap,
   LTileLayer,
@@ -68,11 +65,6 @@ import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster';
 
 export default {
   name: 'VueLeaflet',
-  props: {
-    updateMap: {
-      type: Array,
-    },
-  },
   components: {
     LMap,
     LTileLayer,
@@ -83,7 +75,7 @@ export default {
   data() {
     return {
       zoom: 12,
-      center: latLng(22.627333, 120.318065),
+      center: [22.627333, 120.318065],
       bounds: null,
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       iconColor: {
@@ -96,12 +88,22 @@ export default {
       clusterOptions: {
         disableClusteringAtZoom: 16,
       },
+      icon: L.icon.pulse({
+        iconSize: [22, 22],
+        color: '#668AFE',
+        fillColor: '#668AFE',
+      }),
     };
   },
   watch: {
     updateMap() {
-      this.center = latLng(this.updateMap[0].geometry.coordinates[1],
-        this.updateMap[0].geometry.coordinates[0]);
+      this.center = [this.updateMap[0].geometry.coordinates[1],
+        this.updateMap[0].geometry.coordinates[0]];
+    },
+  },
+  computed: {
+    updateMap() {
+      return this.$store.state.updateMap;
     },
   },
   methods: {
@@ -114,14 +116,11 @@ export default {
     boundsUpdated(bounds) {
       this.bounds = bounds;
     },
-    // 座標經緯度
     getGeometry(geo) {
-      return latLng(geo.coordinates[1], geo.coordinates[0]); // latLng(緯度，經度)
+      return [geo.coordinates[1], geo.coordinates[0]];
     },
-    // 座標顏色
     customIconColor(color) {
-      // leaflet-color-markers
-      const iconColor = new Icon({
+      const iconColor = new L.Icon({
         iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41],
@@ -131,40 +130,25 @@ export default {
       });
       return iconColor;
     },
-    // 依口罩數量(成人+兒童)區分座標顏色
     customIcon(prop) {
       const quantity = prop.mask_adult + prop.mask_child;
-      let icon = this.iconColor.blue;
+      let marker;
       if (quantity > 100) {
-        icon = this.iconColor.green;
+        marker = this.icon;
       } else if (quantity > 50) {
-        icon = this.iconColor.gold;
+        marker = this.iconColor.gold;
       } else if (quantity > 0) {
-        icon = this.iconColor.red;
+        marker = this.iconColor.red;
       } else {
-        icon = this.iconColor.grey;
+        marker = this.iconColor.grey;
       }
-      return icon;
+      return marker;
     },
-    maskAdultClass() {
-      const maskAdult = {
-        'bg-gray-300': true,
-        'text-gray-500': true,
-      };
-      return maskAdult;
-    },
-    maskChildClass() {
-      const maskChild = {
-        'bg-gray-300': true,
-        'text-gray-500': true,
-      };
-      return maskChild;
-    },
+  },
+  mounted() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      this.center = [pos.coords.latitude, pos.coords.longitude];
+    });
   },
 };
 </script>
-
-<style scope>
-  /* @import "~leaflet.markercluster/dist/MarkerCluster.css";
-  @import "~leaflet.markercluster/dist/MarkerCluster.Default.css"; */
-</style>
