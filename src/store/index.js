@@ -10,13 +10,9 @@ export default new Vuex.Store({
     isLoading: false,
     pharmacies: [],
     county: [],
-    towns: [],
     updateMap: [],
   },
   actions: {
-    updateLoading(context, status) {
-      context.commit('LOADING', status);
-    },
     getPharmacy(context) {
       const api = 'https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json';
       context.commit('LOADING', true);
@@ -26,8 +22,8 @@ export default new Vuex.Store({
         context.commit('LOADING', false);
       });
     },
-    towns(context, zones) {
-      context.commit('TOWNS', zones);
+    updateLoading(context, status) {
+      context.commit('LOADING', status);
     },
     updateMap(context, data) {
       context.commit('UPDATEMAP', data);
@@ -47,9 +43,6 @@ export default new Vuex.Store({
         city.add(value.properties.county);
       });
       state.county = Array.from(city);
-    },
-    TOWNS(state, payload) {
-      state.towns = payload;
     },
     UPDATEMAP(state, payload) {
       state.updateMap = payload;

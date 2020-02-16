@@ -12,6 +12,7 @@ import store from './store';
 
 Vue.config.productionTip = false;
 
+Vue.use(Loading);
 Vue.use(VueAxios, axios);
 Vue.use(pulseIcon);
 

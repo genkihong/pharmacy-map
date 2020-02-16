@@ -1,13 +1,23 @@
 <template>
   <div id="app" class="lg:flex h-screen">
-    <Loading :active.sync="isLoading"></Loading>
-
+    <Loading
+      :active.sync="isLoading"
+      :opacity="opacity"
+      :background-color="bgColor"
+      :width="width"
+      loader="bars"
+      color="#668AFE"
+    >
+      <template slot="after">
+        <span class="text-white">Loading...</span>
+      </template>
+    </Loading>
     <div class="w-full lg:w-3/12 overflow-y-scroll">
       <div class="bg-light p-4 sticky top-0 z-10">
         <div class="flex items-center mb-4">
           <label for="city" class="mr-4">縣市</label>
           <select id="city" class="block h-10 bg-white flex-auto"
-            v-model="selectedCity" @change="selectedZone = ''">
+            v-model="selectedCity" @change="handleLoading(); selectedZone = ''">
             <option value="" selected>=== 請選擇城市 ===</option>
             <option :value="item" v-for="item in county" :key="item">{{item}}</option>
           </select>
@@ -78,8 +88,12 @@ export default {
   },
   data() {
     return {
+      opacity: 0.8,
+      bgColor: '#000',
+      width: 60,
       selectedCity: '高雄市',
       selectedZone: '三民區',
+      filterCityData: [],
     };
   },
   computed: {
@@ -93,19 +107,24 @@ export default {
       return this.$store.state.county;
     },
     towns() {
-      return this.$store.state.towns;
+      const vm = this;
+      const zone = new Set();
+      vm.filterCityData.forEach((value) => {
+        zone.add(value.properties.town);
+      });
+      const zones = Array.from(zone);
+      return zones;
     },
     updateMap() {
       const vm = this;
-      const filterCityData = vm.pharmacies.filter((value) => {
+      vm.filterCityData = vm.pharmacies.filter((value) => {
         return value.properties.county === vm.selectedCity;
       });
-      vm.filterTown(filterCityData);
       const filterData = vm.pharmacies.filter((value) => {
         return value.properties.county === vm.selectedCity
                 && value.properties.town === vm.selectedZone;
       });
-      const updateMap = vm.selectedZone ? filterData : filterCityData;
+      const updateMap = vm.selectedZone ? filterData : vm.filterCityData;
       this.$store.dispatch('updateMap', updateMap);
       return this.$store.state.updateMap;
     },
@@ -114,13 +133,14 @@ export default {
     getPharmacy() {
       this.$store.dispatch('getPharmacy');
     },
-    filterTown(data) {
-      const zone = new Set();
-      data.forEach((value) => {
-        zone.add(value.properties.town);
+    handleLoading() {
+      const loader = this.$loading.show({
+        color: '#668AFE',
+        loader: 'dots',
       });
-      const zones = Array.from(zone);
-      this.$store.dispatch('towns', zones);
+      setTimeout(() => {
+        loader.hide();
+      }, 2000);
     },
   },
   mounted() {

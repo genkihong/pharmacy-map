@@ -89,7 +89,7 @@ export default {
         disableClusteringAtZoom: 16,
       },
       icon: L.icon.pulse({
-        iconSize: [22, 22],
+        iconSize: [20, 20],
         color: '#668AFE',
         fillColor: '#668AFE',
       }),
