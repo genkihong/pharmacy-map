@@ -1,10 +1,10 @@
 <template>
-  <div id="app" class="lg:flex h-screen">
+  <div id="app" class="md:flex h-screen">
     <Loading
       :active.sync="isLoading"
-      :opacity="opacity"
-      :background-color="bgColor"
+      :opacity="0.8"
       :width="60"
+      background-color="#000"
       loader="bars"
       color="#668AFE"
     >
@@ -12,7 +12,7 @@
         <span class="text-white">Loading...</span>
       </template>
     </Loading>
-    <div class="w-full lg:w-3/12 overflow-y-scroll">
+    <div class="w-full md:w-3/12 overflow-y-scroll h-screen">
       <div class="bg-light p-4 sticky top-0 z-10">
         <div class="flex items-center mb-4">
           <label for="city" class="mr-4">縣市</label>
@@ -85,12 +85,6 @@ export default {
   name: 'App',
   components: {
     VueLeaflet,
-  },
-  data() {
-    return {
-      opacity: 0.8,
-      bgColor: '#000',
-    };
   },
   computed: {
     selectedCity: {

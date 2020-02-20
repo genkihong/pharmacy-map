@@ -1,5 +1,5 @@
 <template>
-  <div class="hidden lg:block lg:w-9/12">
+  <div class="hidden md:block md:w-9/12">
     <l-map
       :zoom="zoom"
       :center="center"
