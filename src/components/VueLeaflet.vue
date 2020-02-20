@@ -1,18 +1,19 @@
 <template>
-  <div class="hidden lg:block lg:w-9/12 h-screen">
+  <div class="hidden lg:block lg:w-9/12">
     <l-map
-    :zoom="zoom"
-    :center="center"
-    @update:zoom="zoomUpdated"
-    @update:center="centerUpdated"
-    @update:bounds="boundsUpdated"
+      :zoom="zoom"
+      :center="center"
+      @update:zoom="zoomUpdated"
+      @update:center="centerUpdated"
+      @update:bounds="boundsUpdated"
     >
       <l-tile-layer :url="url"></l-tile-layer>
       <v-marker-cluster :options="clusterOptions">
         <l-marker v-for="item in updateMap"
           :key="item.properties.id"
           :icon="customIcon(item.properties)"
-          :lat-lng="getGeometry(item.geometry)"
+          :lat-lng="[item.geometry.coordinates[1],
+                      item.geometry.coordinates[0]]"
         >
           <l-popup>
             <h1 class="text-xl font-medium mb-2">{{item.properties.name}}</h1>
@@ -54,7 +55,6 @@
 
 <script>
 import L from 'leaflet';
-
 import {
   LMap,
   LTileLayer,
@@ -103,7 +103,7 @@ export default {
   },
   computed: {
     updateMap() {
-      return this.$store.state.updateMap;
+      return this.$store.getters.updateMap;
     },
   },
   methods: {
@@ -115,9 +115,6 @@ export default {
     },
     boundsUpdated(bounds) {
       this.bounds = bounds;
-    },
-    getGeometry(geo) {
-      return [geo.coordinates[1], geo.coordinates[0]];
     },
     customIconColor(color) {
       const iconColor = new L.Icon({

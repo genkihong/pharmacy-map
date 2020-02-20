@@ -9,25 +9,9 @@ export default new Vuex.Store({
   state: {
     isLoading: false,
     pharmacies: [],
-    county: [],
     updateMap: [],
-  },
-  actions: {
-    getPharmacy(context) {
-      const api = 'https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json';
-      context.commit('LOADING', true);
-      axios.get(api).then((res) => {
-        context.commit('PHARMACY', res.data.features);
-        context.commit('COUNTY', res.data.features);
-        context.commit('LOADING', false);
-      });
-    },
-    updateLoading(context, status) {
-      context.commit('LOADING', status);
-    },
-    updateMap(context, data) {
-      context.commit('UPDATEMAP', data);
-    },
+    selectedCity: '高雄市',
+    selectedZone: '三民區',
   },
   mutations: {
     LOADING(state, status) {
@@ -36,16 +20,65 @@ export default new Vuex.Store({
     PHARMACY(state, payload) {
       state.pharmacies = payload;
     },
-    COUNTY(state, payload) {
+    SELECTEDCITY(state, payload) {
+      state.selectedCity = payload;
+    },
+    SELECTEDZONE(state, payload) {
+      state.selectedZone = payload;
+    },
+  },
+  actions: {
+    getPharmacy({ commit }) {
+      const api = 'https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json';
+      commit('LOADING', true);
+      axios.get(api).then((res) => {
+        commit('PHARMACY', res.data.features);
+        commit('LOADING', false);
+      });
+    },
+    selectedCity({ commit }, value) {
+      commit('SELECTEDCITY', value);
+    },
+    selectedZone({ commit }, value) {
+      commit('SELECTEDZONE', value);
+    },
+  },
+  getters: {
+    isLoading: (state) => {
+      return state.isLoading;
+    },
+    selectedCity(state) {
+      return state.selectedCity;
+    },
+    selectedZone(state) {
+      return state.selectedZone;
+    },
+    county: (state) => {
       const city = new Set();
-      payload.forEach((value) => {
+      state.pharmacies.forEach((value) => {
         if (!value.properties.county) return;
         city.add(value.properties.county);
       });
-      state.county = Array.from(city);
+      return Array.from(city);
     },
-    UPDATEMAP(state, payload) {
-      state.updateMap = payload;
+    towns: (state, getters) => {
+      const zone = new Set();
+      getters.filterCityData.forEach((value) => {
+        zone.add(value.properties.town);
+      });
+      return Array.from(zone);
+    },
+    filterCityData: (state, getters) => {
+      return state.pharmacies.filter((value) => {
+        return value.properties.county === getters.selectedCity;
+      });
+    },
+    updateMap: (state, getters) => {
+      const filterData = state.pharmacies.filter((value) => {
+        return value.properties.county === getters.selectedCity
+                && value.properties.town === getters.selectedZone;
+      });
+      return getters.selectedZone ? filterData : getters.filterCityData;
     },
   },
 });

@@ -4,7 +4,7 @@
       :active.sync="isLoading"
       :opacity="opacity"
       :background-color="bgColor"
-      :width="width"
+      :width="60"
       loader="bars"
       color="#668AFE"
     >
@@ -90,49 +90,39 @@ export default {
     return {
       opacity: 0.8,
       bgColor: '#000',
-      width: 60,
-      selectedCity: '高雄市',
-      selectedZone: '三民區',
-      filterCityData: [],
     };
   },
   computed: {
-    isLoading() {
-      return this.$store.state.isLoading;
+    selectedCity: {
+      get() {
+        return this.$store.getters.selectedCity;
+      },
+      set(value) {
+        this.$store.dispatch('selectedCity', value);
+      },
     },
-    pharmacies() {
-      return this.$store.state.pharmacies;
+    selectedZone: {
+      get() {
+        return this.$store.getters.selectedZone;
+      },
+      set(value) {
+        this.$store.dispatch('selectedZone', value);
+      },
+    },
+    isLoading() {
+      return this.$store.getters.isLoading;
     },
     county() {
-      return this.$store.state.county;
+      return this.$store.getters.county;
     },
     towns() {
-      const vm = this;
-      const zone = new Set();
-      vm.filterCityData.forEach((value) => {
-        zone.add(value.properties.town);
-      });
-      const zones = Array.from(zone);
-      return zones;
+      return this.$store.getters.towns;
     },
     updateMap() {
-      const vm = this;
-      vm.filterCityData = vm.pharmacies.filter((value) => {
-        return value.properties.county === vm.selectedCity;
-      });
-      const filterData = vm.pharmacies.filter((value) => {
-        return value.properties.county === vm.selectedCity
-                && value.properties.town === vm.selectedZone;
-      });
-      const updateMap = vm.selectedZone ? filterData : vm.filterCityData;
-      this.$store.dispatch('updateMap', updateMap);
-      return this.$store.state.updateMap;
+      return this.$store.getters.updateMap;
     },
   },
   methods: {
-    getPharmacy() {
-      this.$store.dispatch('getPharmacy');
-    },
     handleLoading() {
       const loader = this.$loading.show({
         color: '#668AFE',
@@ -144,7 +134,7 @@ export default {
     },
   },
   mounted() {
-    this.getPharmacy();
+    this.$store.dispatch('getPharmacy');
   },
 };
 </script>
