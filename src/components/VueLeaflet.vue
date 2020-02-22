@@ -129,9 +129,13 @@ export default {
     },
     customIcon(prop) {
       const quantity = prop.mask_adult + prop.mask_child;
+      const maskAadult = prop.mask_adult;
+      const maskChild = prop.mask_child;
       let marker;
-      if (quantity > 100) {
+      if (maskAadult >= 100 && maskChild >= 100) {
         marker = this.icon;
+      } else if (quantity > 100) {
+        marker = this.iconColor.green;
       } else if (quantity > 50) {
         marker = this.iconColor.gold;
       } else if (quantity > 0) {

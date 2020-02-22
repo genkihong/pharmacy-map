@@ -9,7 +9,6 @@ export default new Vuex.Store({
   state: {
     isLoading: false,
     pharmacies: [],
-    updateMap: [],
     selectedCity: '高雄市',
     selectedZone: '三民區',
   },
@@ -35,12 +34,6 @@ export default new Vuex.Store({
         commit('PHARMACY', res.data.features);
         commit('LOADING', false);
       });
-    },
-    selectedCity({ commit }, value) {
-      commit('SELECTEDCITY', value);
-    },
-    selectedZone({ commit }, value) {
-      commit('SELECTEDZONE', value);
     },
   },
   getters: {
