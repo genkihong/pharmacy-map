@@ -9,8 +9,9 @@ export default new Vuex.Store({
   state: {
     isLoading: false,
     pharmacies: [],
+    searchData: [],
     selectedCity: '高雄市',
-    selectedZone: '三民區',
+    selectedZone: '',
   },
   mutations: {
     LOADING(state, status) {
@@ -24,6 +25,9 @@ export default new Vuex.Store({
     },
     SELECTEDZONE(state, payload) {
       state.selectedZone = payload;
+    },
+    SEARCHDATA(state, payload) {
+      state.searchData = payload;
     },
   },
   actions: {
@@ -40,10 +44,10 @@ export default new Vuex.Store({
     isLoading: (state) => {
       return state.isLoading;
     },
-    selectedCity(state) {
+    selectedCity: (state) => {
       return state.selectedCity;
     },
-    selectedZone(state) {
+    selectedZone: (state) => {
       return state.selectedZone;
     },
     county: (state) => {
@@ -66,12 +70,21 @@ export default new Vuex.Store({
         return value.properties.county === getters.selectedCity;
       });
     },
-    updateMap: (state, getters) => {
-      const filterData = state.pharmacies.filter((value) => {
-        return value.properties.county === getters.selectedCity
-                && value.properties.town === getters.selectedZone;
+    filterTownData: (state, getters) => {
+      return getters.filterCityData.filter((value) => {
+        return value.properties.town === getters.selectedZone;
       });
-      return getters.selectedZone ? filterData : getters.filterCityData;
+    },
+    updateMap: (state, getters) => {
+      let filterData = [];
+      if (state.searchData.length > 0) {
+        filterData = state.searchData;
+      } else if (getters.selectedZone) {
+        filterData = getters.filterTownData;
+      } else if (getters.selectedCity) {
+        filterData = getters.filterCityData;
+      }
+      return filterData;
     },
   },
 });

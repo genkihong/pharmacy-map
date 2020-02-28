@@ -15,43 +15,66 @@
     <div class="w-full md:w-3/12 overflow-y-scroll h-screen">
       <div class="bg-light p-4 sticky top-0 z-10">
         <div class="flex items-center mb-4">
-          <label for="city" class="mr-4">縣市</label>
-          <select id="city" class="block h-10 bg-white flex-auto"
-            v-model="selectedCity" @change="handleLoading(); selectedZone = ''">
+          <label for="city" class="mr-5">縣市</label>
+          <select id="city" class="h-10 bg-white flex-auto"
+            v-model="selectedCity" @change="selectedZone = ''">
             <option value="" selected>=== 請選擇城市 ===</option>
             <option :value="item" v-for="item in county" :key="item">{{item}}</option>
           </select>
         </div>
         <div class="flex items-center mb-4">
-          <label for="zone" class="mr-4">地區</label>
-          <select id="zone" class="block h-10 bg-white flex-auto"
+          <label for="zone" class="mr-5">地區</label>
+          <select id="zone" class="h-10 bg-white flex-auto"
             v-model="selectedZone">
             <option value="" selected>=== 請選擇行政區 ===</option>
             <option :value="item" v-for="item in towns" :key="item">{{item}}</option>
           </select>
         </div>
-        <p class="text-right">
+        <div class="flex rounded border border-primary mb-4">
+          <input type="text" class="flex-auto rounded-l pl-4" placeholder="進階搜尋藥局"
+            v-model.trim="searchText"
+            @keyup.enter="handleSearch">
+          <button class="bg-primary hover:bg-darken text-white py-2 px-4 cursor-pointer"
+            @click="handleSearch">
+            <i class="fas fa-search fa-lg"></i>
+          </button>
+          <button class="bg-transparent hover:bg-primary text-primary font-semibold hover:text-white
+            hover:border-transparent cursor-pointer py-2 px-4" @click="clearSearch">
+            <i class="fas fa-sync-alt fa-lg"></i>
+          </button>
+        </div>
+        <p class="text-right" v-if="isResult">
+          取得口罩數量的藥局有 <span class="text-primary text-2xl">0</span> 家
+        </p>
+        <p class="text-right" v-else>
           取得口罩數量的藥局有 <span class="text-primary text-2xl">{{ updateMap.length }}</span> 家
         </p>
       </div>
-      <ul>
+      <div class="border-b-2 border-gray-200 p-8" v-if="isResult">
+        <h2 class="text-3xl text-center">查無資料…</h2>
+      </div>
+      <ul v-else>
         <li class="border-b-2 border-gray-200 p-4 hover:bg-blue-100"
           v-for="item in updateMap" :key="item.properties.id">
           <a :href="`https://www.google.com.tw/maps/search/${ item.properties.address }`" target="_blank">
-            <h1 class="text-xl font-medium mb-3">{{ item.properties.name }}</h1>
+            <h2 class="text-xl font-medium mb-4">{{ item.properties.name }}</h2>
             <div class="text-grey flex items-center mb-3">
-              <i class="map-icon mr-2 block h-4 w-4 bg-no-repeat bg-contain"></i>
+              <img class="mr-2" src="./assets/images/location.svg" width="14" alt="">
               <span>{{ item.properties.address }}</span>
             </div>
             <div class="text-grey flex items-center mb-3">
-              <i class="phone-icon mr-2 block h-4 w-4 bg-no-repeat"></i>
+              <img class="mr-2" src="./assets/images/phone.svg" width="16" alt="">
               <span>{{ item.properties.phone }}</span>
             </div>
             <div class="text-grey flex items-baseline mb-3" v-if="item.properties.note !== '-'">
-              <i class="fas fa-exclamation-circle text-sm mr-2"></i>
+              <i class="fas fa-exclamation-circle mr-2"></i>
               <p>{{ item.properties.note }}</p>
             </div>
-            <div class="flex justify-center mb-3">
+            <div class="text-grey flex items-baseline mb-3" v-if="item.properties.custom_note !== ''">
+              <i class="fas fa-exclamation-circle mr-2"></i>
+              <p>{{ item.properties.custom_note }}</p>
+            </div>
+            <div class="flex justify-center mb-2">
               <div class="text-center py-3 rounded-l rounded-r-none border-r border-white w-1/2
                 bg-gray-300 text-gray-600" v-if="!item.properties.mask_adult">
                 <span>成人口罩: 已售完</span>
@@ -90,6 +113,12 @@ export default {
   components: {
     VueLeaflet,
   },
+  data() {
+    return {
+      searchText: '',
+      isResult: false,
+    };
+  },
   computed: {
     selectedCity: {
       get() {
@@ -121,14 +150,23 @@ export default {
     },
   },
   methods: {
-    handleLoading() {
-      const loader = this.$loading.show({
-        color: '#668AFE',
-        loader: 'dots',
+    handleSearch() {
+      if (!this.searchText) return;
+      const searchData = this.updateMap.filter((value) => {
+        return value.properties.address.includes(this.searchText)
+                || value.properties.name.includes(this.searchText);
       });
-      setTimeout(() => {
-        loader.hide();
-      }, 2000);
+      if (searchData.length > 0) {
+        this.isResult = false;
+        this.$store.commit('SEARCHDATA', searchData);
+      } else {
+        this.isResult = true;
+      }
+    },
+    clearSearch() {
+      this.searchText = '';
+      this.isResult = false;
+      this.$store.commit('SEARCHDATA', []);
     },
   },
   mounted() {
@@ -136,12 +174,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss">
-  .map-icon {
-    background-image: url('./assets/images/location.svg');
-  }
-  .phone-icon {
-    background-image: url('./assets/images/phone.svg');
-  }
-</style>

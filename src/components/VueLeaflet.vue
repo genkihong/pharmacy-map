@@ -1,13 +1,16 @@
 <template>
   <div class="hidden md:block md:w-9/12">
     <l-map
+      ref="map"
       :zoom="zoom"
       :center="center"
+      :options="zoomControl"
       @update:zoom="zoomUpdated"
       @update:center="centerUpdated"
       @update:bounds="boundsUpdated"
     >
       <l-tile-layer :url="url"></l-tile-layer>
+      <l-control-zoom position="topright"></l-control-zoom>
       <v-marker-cluster :options="clusterOptions">
         <l-marker v-for="item in updateMap"
           :key="item.properties.id"
@@ -18,11 +21,11 @@
           <l-popup>
             <h1 class="text-xl font-medium mb-2">{{item.properties.name}}</h1>
             <div class="text-base text-grey flex items-center mb-2">
-              <i class="map-icon mr-2 block h-4 w-4 bg-no-repeat bg-contain"></i>
+              <img class="mr-2" src="../assets/images/location.svg" width="14" alt="">
               <span>{{item.properties.address}}</span>
             </div>
             <div class="text-base text-grey flex items-center mb-2">
-              <i class="phone-icon mr-2 block h-4 w-4 bg-no-repeat"></i>
+              <img class="mr-2" src="../assets/images/phone.svg" width="16" alt="">
               <span>{{item.properties.phone}}</span>
             </div>
             <div class="text-base flex mb-2 justify-center">
@@ -58,6 +61,7 @@ import L from 'leaflet';
 import {
   LMap,
   LTileLayer,
+  LControlZoom,
   LMarker,
   LPopup,
 } from 'vue2-leaflet';
@@ -68,6 +72,7 @@ export default {
   components: {
     LMap,
     LTileLayer,
+    LControlZoom,
     LMarker,
     LPopup,
     'v-marker-cluster': Vue2LeafletMarkerCluster,
@@ -76,6 +81,7 @@ export default {
     return {
       zoom: 12,
       center: [22.627333, 120.318065],
+      zoomControl: { zoomControl: false },
       bounds: null,
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       iconColor: {
@@ -97,8 +103,8 @@ export default {
   },
   watch: {
     updateMap() {
-      this.center = [this.updateMap[0].geometry.coordinates[1],
-        this.updateMap[0].geometry.coordinates[0]];
+      const geo = this.updateMap[0].geometry.coordinates;
+      this.$refs.map.mapObject.flyTo([geo[1], geo[0]], 14);
     },
   },
   computed: {
@@ -128,15 +134,15 @@ export default {
       return iconColor;
     },
     customIcon(prop) {
-      const quantity = prop.mask_adult + prop.mask_child;
       const maskAadult = prop.mask_adult;
       const maskChild = prop.mask_child;
+      const quantity = maskAadult + maskChild;
       let marker;
-      if (maskAadult >= 100 && maskChild >= 100) {
+      if (maskAadult >= 200 && maskChild >= 200) {
         marker = this.icon;
-      } else if (quantity > 100) {
+      } else if (maskAadult > 100) {
         marker = this.iconColor.green;
-      } else if (quantity > 50) {
+      } else if (maskAadult > 50) {
         marker = this.iconColor.gold;
       } else if (quantity > 0) {
         marker = this.iconColor.red;
